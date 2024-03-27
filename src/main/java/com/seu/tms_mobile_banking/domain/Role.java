@@ -21,10 +21,16 @@ public class Role {
     private String name;
 
     @ManyToMany
-    @JoinTable(name = "users_roles")
+    @JoinTable(name = "users_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
     private List<User> user;
 
     @ManyToMany
-    @JoinTable(name = "role_authorities")
+    @JoinTable(name = "role_authorities",
+            joinColumns = @JoinColumn(name = "role_id"),
+            inverseJoinColumns = @JoinColumn(name = "authority_id")
+    )
     private List<RoleAuthoritie> roleAuthorities;
 }
