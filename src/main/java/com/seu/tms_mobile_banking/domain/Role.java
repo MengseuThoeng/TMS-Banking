@@ -20,17 +20,7 @@ public class Role {
     @Column(unique = true, nullable = false, length = 5)
     private String name;
 
-    @ManyToMany
-    @JoinTable(name = "users_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
-    private List<User> user;
+    @OneToOne(mappedBy = "role")
+    private RoleAuthoritie roleAuthoritie;
 
-    @ManyToMany
-    @JoinTable(name = "role_authorities",
-            joinColumns = @JoinColumn(name = "role_id"),
-            inverseJoinColumns = @JoinColumn(name = "authority_id")
-    )
-    private List<RoleAuthoritie> roleAuthorities;
 }

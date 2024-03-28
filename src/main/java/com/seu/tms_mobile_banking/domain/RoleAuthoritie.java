@@ -17,7 +17,9 @@ public class RoleAuthoritie {
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToMany(mappedBy = "roleAuthorities")
-    private List<Role> role;
+    private Integer authority_id;
+
+    @OneToOne
+    private Role role;
 
 }
