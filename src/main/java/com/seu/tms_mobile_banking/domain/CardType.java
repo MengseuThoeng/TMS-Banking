@@ -7,21 +7,25 @@ import lombok.Setter;
 
 import java.util.List;
 
-@Entity
 @NoArgsConstructor
-@Setter
 @Getter
-@Table(name="card_types")
+@Setter
+@Entity
+@Table(name = "card_types")
 public class CardType {
-    @Id
-    private Long id;
 
-    @Column(unique = true,nullable = false)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @Column(unique = true, nullable = false, length = 100)
     private String name;
 
     private Boolean isDeleted;
 
     @OneToMany(mappedBy = "cardType")
     private List<Card> cards;
+
 }
+
 

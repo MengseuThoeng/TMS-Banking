@@ -1,0 +1,9 @@
+package com.seu.tms_mobile_banking.features.user;
+
+import com.seu.tms_mobile_banking.domain.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface UserRepository extends JpaRepository<User,Long> {
+
+}
+
