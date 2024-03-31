@@ -1,16 +1,14 @@
 package com.seu.tms_mobile_banking.features.user.dto;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public record UserDetailResponse(
-        String uuid,
-        String nationalCardId,
+public record UserEditProfileRequest(
         String phoneNumber,
-        String name,
-        String profileImage,
-        String gender,
-        LocalDate dob,
         String cityOrProvince,
         String khanOrDistrict,
         String sangkatOrCommune,
