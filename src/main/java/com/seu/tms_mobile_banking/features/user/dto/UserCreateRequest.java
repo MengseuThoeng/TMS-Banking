@@ -3,6 +3,7 @@ package com.seu.tms_mobile_banking.features.user.dto;
 import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public record UserCreateRequest(
         @NotNull
@@ -27,7 +28,9 @@ public record UserCreateRequest(
         @Size(max = 20)
         String nationalCardId,
         @Size(max = 20)
-        String studentIdCard
+        String studentIdCard,
+        @NotEmpty
+        List<RoleRequest> roles
 
 ) {
 }

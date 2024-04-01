@@ -1,10 +1,8 @@
 package com.seu.tms_mobile_banking.mapper;
 
 import com.seu.tms_mobile_banking.domain.User;
-import com.seu.tms_mobile_banking.features.user.dto.UserCreateRequest;
-import com.seu.tms_mobile_banking.features.user.dto.UserDetailResponse;
-import com.seu.tms_mobile_banking.features.user.dto.UserEditProfileRequest;
-import org.mapstruct.Mapper;
+import com.seu.tms_mobile_banking.features.user.dto.*;
+import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
 public interface UserMapping {
@@ -13,5 +11,8 @@ public interface UserMapping {
     UserDetailResponse toUserDetailsResponse(User user);
 
     User fromUserEditProfileRequest(UserEditProfileRequest request);
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void fromUserUpadateRequest(UserUpadateRequest request, @MappingTarget User user);
 
+    UserResponse toUserResponse(User user);
 }

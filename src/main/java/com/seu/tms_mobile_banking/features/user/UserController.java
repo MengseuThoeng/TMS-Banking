@@ -1,9 +1,7 @@
 package com.seu.tms_mobile_banking.features.user;
 
-import com.seu.tms_mobile_banking.features.user.dto.UserCreateRequest;
-import com.seu.tms_mobile_banking.features.user.dto.UserDetailResponse;
-import com.seu.tms_mobile_banking.features.user.dto.UserEditPasswordRequest;
-import com.seu.tms_mobile_banking.features.user.dto.UserEditProfileRequest;
+import com.seu.tms_mobile_banking.base.BasedMessage;
+import com.seu.tms_mobile_banking.features.user.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,7 +24,35 @@ public class UserController {
     }
 
     @PutMapping("/editProfile/{uuid}")
-    UserDetailResponse editProfile  (@PathVariable String uuid, @Valid @RequestBody UserEditProfileRequest request){
+    UserEditProfileResponse editProfile  (@PathVariable String uuid, @Valid @RequestBody UserEditProfileRequest request){
         return userService.editProfile(uuid,request);
     }
+
+    @PatchMapping("/{uuid}")
+    UserResponse updateByUuid(@PathVariable String uuid,@RequestBody UserUpadateRequest request){
+        return userService.updateByUuid(uuid,request);
+    }
+    @GetMapping("/{uuid}")
+    UserResponse findByUuid(@PathVariable String uuid){
+        return userService.findUserByUuid(uuid);
+    }
+    // Delete user by uuid hard delete
+    // disable change status isDelete to true
+    // enable change status isDelete to false
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("{uuid}")
+    void deleteUserFromDatabase (@PathVariable String uuid){
+        userService.deleteUserFromDatabase(uuid);
+    }
+    @PutMapping("/{uuid}/disable")
+    BasedMessage disableDeletedByUuid(@PathVariable String uuid){
+        return userService.disableDeletedByUuid(uuid);
+    }
+    @PutMapping("/{uuid}/enable")
+    BasedMessage enableDeletedByUuid(@PathVariable String uuid){
+        return userService.enableDeletedByUuid(uuid);
+    }
+
 }
+ 

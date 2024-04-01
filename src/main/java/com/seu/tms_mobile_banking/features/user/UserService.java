@@ -1,14 +1,17 @@
 package com.seu.tms_mobile_banking.features.user;
 
-import com.seu.tms_mobile_banking.features.user.dto.UserCreateRequest;
-import com.seu.tms_mobile_banking.features.user.dto.UserDetailResponse;
-import com.seu.tms_mobile_banking.features.user.dto.UserEditPasswordRequest;
-import com.seu.tms_mobile_banking.features.user.dto.UserEditProfileRequest;
+import com.seu.tms_mobile_banking.base.BasedMessage;
+import com.seu.tms_mobile_banking.features.user.dto.*;
 
 public interface UserService {
     void createUser(UserCreateRequest request);
     void editPwd(String uuid,UserEditPasswordRequest request);
+    UserEditProfileResponse editProfile (String uuid, UserEditProfileRequest request);
+    UserResponse updateByUuid(String uuid,UserUpadateRequest request);
 
-    UserDetailResponse editProfile (String uuid,UserEditProfileRequest request);
+    UserResponse findUserByUuid(String uuid);
+    void deleteUserFromDatabase(String uuid);
 
+    BasedMessage disableDeletedByUuid(String uuid);
+    BasedMessage enableDeletedByUuid(String uuid);
 }
