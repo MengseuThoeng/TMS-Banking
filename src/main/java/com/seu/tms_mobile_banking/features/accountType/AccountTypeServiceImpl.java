@@ -2,11 +2,13 @@ package com.seu.tms_mobile_banking.features.accountType;
 
 import com.seu.tms_mobile_banking.domain.AccountType;
 import com.seu.tms_mobile_banking.features.accountType.dto.AccountTypeResponse;
+import com.seu.tms_mobile_banking.mapper.AccountTypeMapping;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Collections;
 import java.util.List;
 
 import static java.util.stream.Collectors.toList;
@@ -15,15 +17,11 @@ import static java.util.stream.Collectors.toList;
 @RequiredArgsConstructor
 public class AccountTypeServiceImpl implements AccountTypeService{
     private final AccountTypeRepository accountTypeRepository;
+    private final AccountTypeMapping accountTypeMapping;
     @Override
     public List<AccountTypeResponse> findAllAccountType() {
         List<AccountType> accountTypes = accountTypeRepository.findAll();
-        return accountTypes.stream().map(at -> new AccountTypeResponse(
-                at.getName(),
-                at.getAlias(),
-                at.getDescription(),
-                at.getIsDeleted()
-        )).toList();
+        return accountTypeMapping.toAccountTypeResponseList(accountTypes);
     }
 
     @Override
@@ -34,7 +32,7 @@ public class AccountTypeServiceImpl implements AccountTypeService{
                     HttpStatus.NOT_FOUND,"Don't Found"
             );
         }
-        return new AccountTypeResponse(accountType.getName(),accountType.getAlias(),accountType.getDescription(),accountType.getIsDeleted());
+        return accountTypeMapping.toAccountTypeResponse(accountType);
     }
 
 }

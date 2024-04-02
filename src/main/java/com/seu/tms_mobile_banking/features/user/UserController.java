@@ -4,8 +4,11 @@ import com.seu.tms_mobile_banking.base.BasedMessage;
 import com.seu.tms_mobile_banking.features.user.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -17,6 +20,12 @@ public class UserController {
     void createNew(@Valid @RequestBody UserCreateRequest request){
         userService.createUser(request);
     }
+    @GetMapping
+    Page<UserResponse> findList(@RequestParam(required = false, defaultValue = "0") int page,
+                                @RequestParam(required = false, defaultValue = "10") int limit) {
+        return userService.findAll(page, limit);
+    }
+
 
     @PutMapping("/editPwd/{uuid}")
     void editPwd(@Valid @RequestBody UserEditPasswordRequest request, @PathVariable String uuid) {
@@ -29,11 +38,11 @@ public class UserController {
     }
 
     @PatchMapping("/{uuid}")
-    UserResponse updateByUuid(@PathVariable String uuid,@RequestBody UserUpadateRequest request){
+    UserDetailResponse updateByUuid(@PathVariable String uuid,@RequestBody UserUpadateRequest request){
         return userService.updateByUuid(uuid,request);
     }
     @GetMapping("/{uuid}")
-    UserResponse findByUuid(@PathVariable String uuid){
+    UserDetailResponse findByUuid(@PathVariable String uuid){
         return userService.findUserByUuid(uuid);
     }
     // Delete user by uuid hard delete

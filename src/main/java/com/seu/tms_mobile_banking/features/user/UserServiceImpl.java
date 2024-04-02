@@ -7,8 +7,9 @@ import com.seu.tms_mobile_banking.features.user.dto.*;
 import com.seu.tms_mobile_banking.mapper.UserMapping;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -133,7 +134,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse updateByUuid(String uuid, UserUpadateRequest request) {
+    public UserDetailResponse updateByUuid(String uuid, UserUpadateRequest request) {
         User user = userRepository.findUserByUuid(uuid).orElseThrow(()->
                  new ResponseStatusException(
                 HttpStatus.NOT_FOUND,
@@ -145,13 +146,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse findUserByUuid(String uuid) {
+    public UserDetailResponse findUserByUuid(String uuid) {
         User user = userRepository.findUserByUuid(uuid).orElseThrow(
                 ()->new ResponseStatusException(
                         HttpStatus.NOT_FOUND,"Don't Found User"
                 )
         );
-        return new UserResponse(user.getUuid(),user.getName(),user.getProfileImage(),user.getGender(),user.getDob());
+        return userMapping.toUserResponse(user);
+
+
     }
 
     @Transactional
@@ -185,5 +188,12 @@ public class UserServiceImpl implements UserService {
         }
         userRepository.enableDeletedByUuid(uuid);
         return new BasedMessage("you has been enable isDeleted!!");
+    }
+
+    @Override
+    public Page<UserResponse> findAll(int page, int limit) {
+        PageRequest pageRequest = PageRequest.of(page,limit);
+        Page<User> findAll=userRepository.findAll(pageRequest);
+        return findAll.map(userMapping::toUserResponseList);
     }
 }
