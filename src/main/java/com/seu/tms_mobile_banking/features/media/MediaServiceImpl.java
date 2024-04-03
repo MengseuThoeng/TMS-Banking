@@ -7,13 +7,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -120,5 +126,60 @@ public class MediaServiceImpl implements MediaService {
             throw new RuntimeException(e);
         }
 
+    }
+    @Override
+    public List<MediaResponse> findAllFile(String folderName) {
+        List<MediaResponse> mediaResponseList = new ArrayList<>();
+        // Create a File object representing the directory
+        File directory = new File(serverPath + folderName);
+
+        // Check if the directory exists and is a directory
+        if (directory.exists() && directory.isDirectory()) {
+            // List all files in the directory
+            File[] files = directory.listFiles();
+
+            if (files != null) {
+                for (File file : files) {
+                    MediaResponse mediaResponse = MediaResponse.builder()
+                            .name(file.getName())
+                            .contentType(MediaUtil.extractExtension(file.getName()))
+                            .extension(MediaUtil.extractExtension(file.getName()))
+                            .uri(String.format("%s%s/%s", baseUri, folderName, file.getName()))
+                            .size(file.length())
+                            .build();
+                    mediaResponseList.add(mediaResponse);
+                }
+            }
+        } else {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "Directory not found"
+            );
+        }
+
+        return mediaResponseList;
+    }
+
+    @Override
+    public ResponseEntity<byte[]> downloadMediaByName(String name, String folderName) {
+        try {
+            // Construct the URL of the media file
+            URL url = new URL(String.format("%s%s/%s", baseUri, folderName, name));
+
+            // Read the image data from the URL into a byte array
+            byte[] imageData = StreamUtils.copyToByteArray(url.openStream());
+
+            // Get the content type of the image
+            String contentType = Files.probeContentType(Paths.get(name));
+
+            // Set up the HTTP headers for the response
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType(contentType));
+            headers.setContentDispositionFormData("attachment", name);
+
+            // Return the ResponseEntity with image data and headers
+            return new ResponseEntity<>(imageData, headers, HttpStatus.OK);
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error downloading media", e);
+        }
     }
 }

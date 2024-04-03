@@ -3,6 +3,7 @@ package com.seu.tms_mobile_banking.features.media;
 import com.seu.tms_mobile_banking.features.media.dto.MediaResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,5 +34,14 @@ public class MediaController {
     MediaResponse deleteByName(@PathVariable String mediaName){
         return mediaService.deleteMediaByName(mediaName,"IMAGE");
     }
+    @GetMapping("/all")
+    List<MediaResponse> findAllFiles (){
+        return mediaService.findAllFile("IMAGE");
+    }
+    @GetMapping("/download/{name}")
+    ResponseEntity<byte[]>downloadMediaByName(@PathVariable String name){
+        return mediaService.downloadMediaByName(name,"IMAGE");
+    }
+
 
 }
