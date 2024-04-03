@@ -1,20 +1,27 @@
 package com.seu.tms_mobile_banking.features.media;
 
 import com.seu.tms_mobile_banking.features.media.dto.MediaResponse;
+import com.seu.tms_mobile_banking.util.MediaUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -32,11 +39,8 @@ public class MediaServiceImpl implements MediaService {
         String newName = UUID.randomUUID().toString();
 
         // get extension from file after the user upload
-        int lastDotIndex = file.getOriginalFilename()
-                .lastIndexOf(".");
-        String extension = file.getOriginalFilename().substring(lastDotIndex + 1);
-        newName += "." + extension;
-
+        String extension = MediaUtil.extractExtension(Objects.requireNonNull(file.getOriginalFilename()));
+        newName+="."+extension;
         //copy file user upload to server
         Path path = Paths.get(serverPath + folderName + "\\" + newName);
         try {
@@ -53,5 +57,68 @@ public class MediaServiceImpl implements MediaService {
                 .extension(extension)
                 .uri(String.format("%s%s/%s", baseUri, folderName, newName))
                 .size(file.getSize()).build();
+    }
+
+    @Override
+    public List<MediaResponse> uploadMultiple(List<MultipartFile> files, String folderName) {
+        // Create empty arraylist wait for adding upload file
+        List<MediaResponse> mediaResponsesList = new ArrayList<>();
+        // Upload file
+        files.forEach(file-> {
+            MediaResponse mediaResponse = this.uploadSingle(file, folderName);
+            mediaResponsesList.add(mediaResponse);
+        });
+        return mediaResponsesList;
+    }
+
+    @Override
+    public MediaResponse loadMediaByName(String mediaName,String folderName) {
+        //create absulote path
+        Path path = Paths.get(serverPath + folderName + "\\" + mediaName);
+
+        try{
+            Resource resource = new UrlResource((path.toUri()));
+            if (!resource.exists()){
+                throw new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,"Don't Found"
+                );
+            }
+            return MediaResponse.builder()
+                    .name(resource.getFilename())
+                    .contentType(Files.probeContentType(path))
+                    .extension(MediaUtil.extractExtension(mediaName))
+                    .uri(String.format("%s%s/%s", baseUri, folderName, mediaName))
+                    .size(resource.contentLength()).build();
+        }catch (MalformedURLException ex){
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,ex.getLocalizedMessage());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    @Override
+    public MediaResponse deleteMediaByName(String mediaName, String folderName) {
+        Path path = Paths.get(serverPath + folderName + "\\" + mediaName);
+
+        try {
+            long size= Files.size(path);
+            if(Files.deleteIfExists(path)){
+                return MediaResponse.builder()
+                        .name(mediaName)
+                        .contentType(Files.probeContentType(path))
+                        .extension(MediaUtil.extractExtension(mediaName))
+                        .uri(String.format("%s%s/%s", baseUri, folderName, mediaName))
+                        .size(size)
+                        .build();
+            }
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,"Don't Found"
+            );
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 }
