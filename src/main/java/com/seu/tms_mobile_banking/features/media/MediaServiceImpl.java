@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
@@ -120,5 +121,37 @@ public class MediaServiceImpl implements MediaService {
             throw new RuntimeException(e);
         }
 
+    }
+
+    @Override
+    public List<MediaResponse> findAllFile(String folderName) {
+        List<MediaResponse> mediaResponseList = new ArrayList<>();
+        // Create a File object representing the directory
+        File directory = new File(serverPath + folderName);
+
+        // Check if the directory exists and is a directory
+        if (directory.exists() && directory.isDirectory()) {
+            // List all files in the directory
+            File[] files = directory.listFiles();
+
+            if (files != null) {
+                for (File file : files) {
+                    MediaResponse mediaResponse = MediaResponse.builder()
+                            .name(file.getName())
+                            .contentType(MediaUtil.extractExtension(file.getName()))
+                            .extension(MediaUtil.extractExtension(file.getName()))
+                            .uri(String.format("%s%s/%s", baseUri, folderName, file.getName()))
+                            .size(file.length())
+                            .build();
+                    mediaResponseList.add(mediaResponse);
+                }
+            }
+        } else {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "Directory not found"
+            );
+        }
+
+        return mediaResponseList;
     }
 }

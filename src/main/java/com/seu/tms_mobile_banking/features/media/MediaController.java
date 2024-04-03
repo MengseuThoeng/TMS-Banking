@@ -33,5 +33,9 @@ public class MediaController {
     MediaResponse deleteByName(@PathVariable String mediaName){
         return mediaService.deleteMediaByName(mediaName,"IMAGE");
     }
+    @GetMapping("/all")
+    List<MediaResponse> findAllFiles (){
+        return mediaService.findAllFile("IMAGE");
+    }
 
 }
