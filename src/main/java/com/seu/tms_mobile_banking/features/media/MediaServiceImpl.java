@@ -130,7 +130,6 @@ public class MediaServiceImpl implements MediaService {
     @Override
     public List<MediaResponse> findAllFile(String folderName) {
         List<MediaResponse> mediaResponseList = new ArrayList<>();
-        // Create a File object representing the directory
         File directory = new File(serverPath + folderName);
 
         // Check if the directory exists and is a directory
@@ -155,28 +154,22 @@ public class MediaServiceImpl implements MediaService {
                     HttpStatus.NOT_FOUND, "Directory not found"
             );
         }
-
         return mediaResponseList;
     }
 
     @Override
     public ResponseEntity<byte[]> downloadMediaByName(String name, String folderName) {
         try {
-            // Construct the URL of the media file
             URL url = new URL(String.format("%s%s/%s", baseUri, folderName, name));
 
-            // Read the image data from the URL into a byte array
             byte[] imageData = StreamUtils.copyToByteArray(url.openStream());
 
-            // Get the content type of the image
             String contentType = Files.probeContentType(Paths.get(name));
 
-            // Set up the HTTP headers for the response
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.parseMediaType(contentType));
             headers.setContentDispositionFormData("attachment", name);
 
-            // Return the ResponseEntity with image data and headers
             return new ResponseEntity<>(imageData, headers, HttpStatus.OK);
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error downloading media", e);

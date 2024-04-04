@@ -42,6 +42,4 @@ public class MediaController {
     ResponseEntity<byte[]>downloadMediaByName(@PathVariable String name){
         return mediaService.downloadMediaByName(name,"IMAGE");
     }
-
-
 }
