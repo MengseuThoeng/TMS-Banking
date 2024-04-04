@@ -7,6 +7,7 @@ import com.seu.tms_mobile_banking.features.user.dto.*;
 import com.seu.tms_mobile_banking.mapper.UserMapping;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -24,6 +25,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapping userMapping;
     private final RoleRepository roleRepository;
+    @Value("${media.base-uri}")
+    private String mediaBaseUri;
 
     @Override
     public void createUser(UserCreateRequest request) {
@@ -195,5 +198,18 @@ public class UserServiceImpl implements UserService {
         PageRequest pageRequest = PageRequest.of(page,limit);
         Page<User> findAll=userRepository.findAll(pageRequest);
         return findAll.map(userMapping::toUserResponseList);
+    }
+
+    @Override
+    public String updateProfileImage(String mediaName,String uuid) {
+        User user = userRepository.findByUuid(uuid);
+        if(user==null){
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,"Don't Found"
+            );
+        }
+        user.setProfileImage(mediaName);
+        userRepository.save(user);
+        return mediaBaseUri+"IMAGE/"+mediaName;
     }
 }

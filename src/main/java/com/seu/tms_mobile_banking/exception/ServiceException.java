@@ -1,5 +1,6 @@
 package com.seu.tms_mobile_banking.exception;
 
+import com.seu.tms_mobile_banking.base.BaseError;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -12,7 +13,9 @@ public class ServiceException {
 
     @ExceptionHandler(ResponseStatusException.class)
     ResponseEntity<?> handleServiceErrors(ResponseStatusException ex){
-        return ResponseEntity.status(ex.getStatusCode())
-                .body(Map.of("errors", ex.getReason()));
+        BaseError<String> baseError = new BaseError<>();
+        baseError.setCode(ex.getStatusCode().toString());
+        baseError.setDescription(ex.getReason());
+        return ResponseEntity.status(ex.getStatusCode()).body(baseError);
     }
 }

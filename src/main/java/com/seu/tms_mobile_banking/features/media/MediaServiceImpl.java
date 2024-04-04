@@ -7,23 +7,25 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -122,11 +124,9 @@ public class MediaServiceImpl implements MediaService {
         }
 
     }
-
     @Override
     public List<MediaResponse> findAllFile(String folderName) {
         List<MediaResponse> mediaResponseList = new ArrayList<>();
-        // Create a File object representing the directory
         File directory = new File(serverPath + folderName);
 
         // Check if the directory exists and is a directory
@@ -151,7 +151,26 @@ public class MediaServiceImpl implements MediaService {
                     HttpStatus.NOT_FOUND, "Directory not found"
             );
         }
-
         return mediaResponseList;
+    }
+
+    @Override
+    public ResponseEntity<byte[]> downloadMediaByName(String name, String folderName) {
+        try {
+            URL url = new URL(String.format("%s%s/%s", baseUri, folderName, name));
+            log.info(String.valueOf(url));
+
+            byte[] imageData = StreamUtils.copyToByteArray(url.openStream());
+
+            String contentType = Files.probeContentType(Paths.get(name));
+            log.info(contentType);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType(contentType));
+            headers.setContentDispositionFormData("attachment", name);
+            return new ResponseEntity<>(imageData, headers, HttpStatus.OK);
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error downloading media", e);
+        }
     }
 }

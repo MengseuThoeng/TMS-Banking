@@ -1,5 +1,7 @@
 package com.seu.tms_mobile_banking.exception;
 
+import com.seu.tms_mobile_banking.base.BaseError;
+import com.seu.tms_mobile_banking.base.BasedErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,7 +17,8 @@ import java.util.Map;
 public class ValidationException {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, Object> handleValidationErrors(MethodArgumentNotValidException ex) {
+    public BasedErrorResponse handleValidationErrors(MethodArgumentNotValidException ex) {
+        BaseError<List<?>> basedError = new BaseError<>();
         List<Map<String, Object>> errors = new ArrayList<>();
         ex.getBindingResult().getFieldErrors()
                 .forEach(fieldError -> {
@@ -24,7 +27,9 @@ public class ValidationException {
                     error.put("reason", fieldError.getDefaultMessage());
                     errors.add(error);
                 });
-        return Map.of("errors", errors);
+        basedError.setCode(HttpStatus.BAD_GATEWAY.getReasonPhrase());
+        basedError.setDescription(errors);
+        return new BasedErrorResponse(basedError);
     }
 }
 

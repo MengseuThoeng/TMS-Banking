@@ -17,4 +17,6 @@ public interface UserService {
     BasedMessage enableDeletedByUuid(String uuid);
 
     Page<UserResponse> findAll(int page, int limit);
+
+    String updateProfileImage(String mediaName,String uuid);
 }

@@ -1,6 +1,7 @@
 package com.seu.tms_mobile_banking.features.user;
 
 import com.seu.tms_mobile_banking.base.BasedMessage;
+import com.seu.tms_mobile_banking.base.BasedResponse;
 import com.seu.tms_mobile_banking.features.user.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -45,10 +46,6 @@ public class UserController {
     UserDetailResponse findByUuid(@PathVariable String uuid){
         return userService.findUserByUuid(uuid);
     }
-    // Delete user by uuid hard delete
-    // disable change status isDelete to true
-    // enable change status isDelete to false
-
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("{uuid}")
     void deleteUserFromDatabase (@PathVariable String uuid){
@@ -63,5 +60,9 @@ public class UserController {
         return userService.enableDeletedByUuid(uuid);
     }
 
+    @PutMapping("/{uuid}/profile-image")
+    BasedResponse<?> updateProfileImage (@PathVariable String uuid, @RequestBody UserProfileImageRequest request){
+        String newProfileImageUri = userService.updateProfileImage(request.mediaName(),uuid);
+        return BasedResponse.builder().payload(newProfileImageUri).build();
+    }
 }
- 

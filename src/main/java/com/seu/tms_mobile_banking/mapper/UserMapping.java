@@ -19,8 +19,9 @@ public interface UserMapping {
     void fromUserUpadateRequest(UserUpadateRequest request, @MappingTarget User user);
 
     UserDetailResponse toUserResponse(User user);
+    UserResponse toUserRes(User user);
 
-    List<UserResponse> toUserResponeList(List<User> findAll);
+//    List<UserResponse> toUserResponeList(List<User> findAll);
 
     UserResponse toUserResponseList(User user);
 

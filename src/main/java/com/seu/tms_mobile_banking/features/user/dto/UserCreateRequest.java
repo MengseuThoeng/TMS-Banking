@@ -6,10 +6,10 @@ import java.time.LocalDate;
 import java.util.List;
 
 public record UserCreateRequest(
-        @NotNull
+        @NotNull(message = "Pin is required")
         @Max(9999)
         Integer pin,
-        @NotBlank
+        @NotBlank(message = "PhoneNumber is required")
         @Size(max = 20)
         String phoneNumber,
         @NotBlank
