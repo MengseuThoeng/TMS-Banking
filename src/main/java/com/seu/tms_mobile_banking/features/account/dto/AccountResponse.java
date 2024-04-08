@@ -10,7 +10,7 @@ public record AccountResponse(
         String actName,
         String alias,
         String balance,
-        AccountTypeResponse accountTypeResponse,
+        AccountTypeResponse accountType,
         UserResponse user
 ) {
 }
