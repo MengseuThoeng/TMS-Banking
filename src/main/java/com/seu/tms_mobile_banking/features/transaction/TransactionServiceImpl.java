@@ -9,6 +9,9 @@ import com.seu.tms_mobile_banking.mapper.TransactionMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
@@ -40,6 +43,11 @@ public class TransactionServiceImpl implements TransactionService{
                                 HttpStatus.NOT_FOUND,"Not Found Receiver!!"
                         ));
         // check amount transfer
+        if (owner.getActNo().equals(receiver.getActNo())){
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,"You can't transfer to your own account"
+            );
+        }
         if (owner.getBalance().doubleValue()<request.amount().doubleValue()){
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,"INSUFFICIENT BALANCE"
@@ -64,5 +72,28 @@ public class TransactionServiceImpl implements TransactionService{
         transaction = transactionRepository.save(transaction);
 
         return transactionMapper.toTransactionResponse(transaction);
+    }
+
+    @Override
+    public Page<TransactionResponse> transactionHistory(int page, int size,String sortDirection,String transactionType) {
+        // Validate page and size parameters...
+
+        // Define sorting criteria
+        Sort.Direction direction = sortDirection.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Sort sortByTransactionAt = Sort.by(direction, "transactionAt");
+
+        // Create pageable request
+        PageRequest pageRequest = PageRequest.of(page, size, sortByTransactionAt);
+
+        // Fetch transactions based on pageable request and transaction type
+        Page<Transaction> transactions;
+        if (transactionType != null && !transactionType.isEmpty()) {
+            transactions = transactionRepository.findByTransactionType(transactionType, pageRequest);
+        } else {
+            transactions = transactionRepository.findAll(pageRequest);
+        }
+
+        // Map transactions to transaction responses
+        return transactions.map(transactionMapper::toTransactionResponse);
     }
 }
