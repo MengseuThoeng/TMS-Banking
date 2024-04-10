@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class TransactionServiceImpl implements TransactionService{
+public class TransactionServiceImpl implements TransactionService {
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
     private final TransactionMapper transactionMapper;
@@ -30,33 +30,33 @@ public class TransactionServiceImpl implements TransactionService{
     @Transactional
     @Override
     public TransactionResponse transfers(TransactionCreateRequest request) {
-        log.info("transfers(TransactionCreateRequest request) :{}",request);
+        log.info("transfers(TransactionCreateRequest request) :{}", request);
         // validation owner account number and receiver account number
         Account owner = accountRepository.findByActNo(request.ownerActNo())
-                .orElseThrow(()->
+                .orElseThrow(() ->
                         new ResponseStatusException(
-                                HttpStatus.NOT_FOUND,"Not Found Owner!!"
+                                HttpStatus.NOT_FOUND, "Not Found Owner!!"
                         ));
         Account receiver = accountRepository.findByActNo(request.transferReceiverActNo())
-                .orElseThrow(()->
+                .orElseThrow(() ->
                         new ResponseStatusException(
-                                HttpStatus.NOT_FOUND,"Not Found Receiver!!"
+                                HttpStatus.NOT_FOUND, "Not Found Receiver!!"
                         ));
         // check amount transfer
-        if (owner.getActNo().equals(receiver.getActNo())){
+        if (owner.getActNo().equals(receiver.getActNo())) {
             throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,"You can't transfer to your own account"
+                    HttpStatus.CONFLICT, "You can't transfer to your own account"
             );
         }
-        if (owner.getBalance().doubleValue()<request.amount().doubleValue()){
+        if (owner.getBalance().doubleValue() < request.amount().doubleValue()) {
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,"INSUFFICIENT BALANCE"
+                    HttpStatus.BAD_REQUEST, "INSUFFICIENT BALANCE"
             );
         }
         // check amount transfer
         if (owner.getTransferLimit().doubleValue() < request.amount().doubleValue()) {
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,"TRANSACTION TRANSFER HAS BEEN OVER LIMIT!!"
+                    HttpStatus.BAD_REQUEST, "TRANSACTION TRANSFER HAS BEEN OVER LIMIT!!"
             );
         }
         // withdraw from owner
@@ -75,25 +75,24 @@ public class TransactionServiceImpl implements TransactionService{
     }
 
     @Override
-    public Page<TransactionResponse> transactionHistory(int page, int size,String sortDirection,String transactionType) {
-        // Validate page and size parameters...
-
-        // Define sorting criteria
-        Sort.Direction direction = sortDirection.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+    public Page<TransactionResponse> transactionHistory(int page, int size, String sort, String transactionType) {
+        if (page < 0 || size < 1) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Page can't be less than 0 or Size can't be less than 1 please check the URI again!!"
+            );
+        }
+        Sort.Direction direction = sort.equalsIgnoreCase("date:asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
         Sort sortByTransactionAt = Sort.by(direction, "transactionAt");
 
-        // Create pageable request
         PageRequest pageRequest = PageRequest.of(page, size, sortByTransactionAt);
 
-        // Fetch transactions based on pageable request and transaction type
         Page<Transaction> transactions;
         if (transactionType != null && !transactionType.isEmpty()) {
             transactions = transactionRepository.findByTransactionType(transactionType, pageRequest);
         } else {
             transactions = transactionRepository.findAll(pageRequest);
         }
-
-        // Map transactions to transaction responses
         return transactions.map(transactionMapper::toTransactionResponse);
     }
 }

@@ -21,10 +21,10 @@ public class TransactionController {
     Page<TransactionResponse> transactionHistory (
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "25") int size,
-            @RequestParam(defaultValue = "desc") String sortDirection,
+            @RequestParam(defaultValue = "desc") String sort,
             @RequestParam(required = false) String transactionType
     ) {
-        return transactionService.transactionHistory(page,size,sortDirection,transactionType);
+        return transactionService.transactionHistory(page,size,sort,transactionType);
     }
 
 }
