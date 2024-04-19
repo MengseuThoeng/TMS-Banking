@@ -7,7 +7,6 @@ import com.seu.tms_mobile_banking.features.accountType.AccountTypeRepository;
 import com.seu.tms_mobile_banking.features.cardType.CardTypeRepository;
 import com.seu.tms_mobile_banking.features.user.RoleRepository;
 import jakarta.annotation.PostConstruct;
-import jakarta.persistence.PostPersist;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
