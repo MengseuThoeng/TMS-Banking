@@ -12,10 +12,13 @@ import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
+import org.springframework.security.core.GrantedAuthority;
+
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +37,10 @@ public class AuthServiceImpl implements AuthService{
         log.info("Auth :"+auth.getPrincipal());
 
         Instant now = Instant.now();
+        String scope = auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining(" "));
+
         CustomUserDetail customUserDetail = (CustomUserDetail) auth.getPrincipal();
         log.info(customUserDetail.getUsername());
         log.info(customUserDetail.getUser().getName());
@@ -45,6 +52,7 @@ public class AuthServiceImpl implements AuthService{
                 .issuedAt(now)
                 .expiresAt(now.plus(20, ChronoUnit.SECONDS))
                 .issuer(customUserDetail.getUsername())
+                .claim("scope",scope)
                 .build();
         String accessToken = jwtEncoder.encode(JwtEncoderParameters.from(jwtClaimsSet)).getTokenValue();
         return new AuthResponse(
