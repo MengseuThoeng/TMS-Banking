@@ -6,8 +6,10 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
@@ -21,6 +23,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider;
 import org.springframework.security.web.SecurityFilterChain;
 
 import java.security.KeyPair;
@@ -62,6 +65,10 @@ public class SecurityConfig {
 //        return manager;
 //    }
     @Bean
+    JwtAuthenticationProvider jwtAuthenticationProvider(@Qualifier("refreshJwtDecoder") JwtDecoder refreshJwtDecoder) {
+        return new JwtAuthenticationProvider(refreshJwtDecoder);
+    }
+    @Bean
     DaoAuthenticationProvider daoAuthenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(userDetailsService);
@@ -74,7 +81,15 @@ public class SecurityConfig {
         httpSecurity
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(HttpMethod.POST, "/api/v1/users").permitAll()
-                        .requestMatchers( "/api/v1/users/**").hasAuthority("SCOPE_ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/users/**").hasAuthority("SCOPE_user:write")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/**").hasAuthority("SCOPE_user:read")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/users/**").hasAuthority("SCOPE_user:write")
+
+                        .requestMatchers(HttpMethod.POST, "/api/v1/accounts").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/accounts/**").hasAuthority("SCOPE_account:write")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/accounts/**").hasAuthority("SCOPE_account:read")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/accounts/**").hasAuthority("SCOPE_account:write")
+
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/**").permitAll()
                         .anyRequest().authenticated()
                 )
@@ -86,7 +101,9 @@ public class SecurityConfig {
         return httpSecurity.build();
     }
 
+    @Primary
     @Bean
+    //JWT ACCESS TOKEN
     KeyPair keyPair() {
         try {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
@@ -95,6 +112,7 @@ public class SecurityConfig {
             throw new RuntimeException();
         }
     }
+    @Primary
     @Bean
     RSAKey rsaKey(KeyPair keyPair){
         return new RSAKey.Builder(
@@ -103,21 +121,59 @@ public class SecurityConfig {
                 .keyID((UUID.randomUUID().toString()))
                 .build();
     }
+    @Primary
     @Bean
     JWKSource<SecurityContext> jwkSource(RSAKey rsaKey){
         JWKSet jwkSet = new JWKSet(rsaKey);
         return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
     }
+    @Primary
     @Bean
     //Create Token
     JwtEncoder jwtEncoder(JWKSource<SecurityContext> jwkSource){
         return new NimbusJwtEncoder(jwkSource);
     }
 
+    @Primary
     @Bean
     JwtDecoder jwtDecoder(RSAKey rsaKey) throws JOSEException {
         return NimbusJwtDecoder.withPublicKey(rsaKey.toRSAPublicKey()).build();
     }
+
+    @Bean(name = "refreshKeyPair")//JWT REFRESH TOKEN
+    KeyPair refreshKeyPair() {
+        try {
+            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+            return keyPairGenerator.generateKeyPair();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException();
+        }
+    }
+    @Bean(name = "refreshRsaKey")
+    RSAKey refreshRsaKey(@Qualifier("refreshKeyPair") KeyPair keyPair){
+        return new RSAKey.Builder(
+                (RSAPublicKey) keyPair.getPublic())
+                .privateKey(keyPair.getPrivate())
+                .keyID((UUID.randomUUID().toString()))
+                .build();
+    }
+    @Bean(name="refreshJwkSource")
+    JWKSource<SecurityContext> refreshJwkSource(@Qualifier("refreshRsaKey") RSAKey rsaKey){
+        JWKSet jwkSet = new JWKSet(rsaKey);
+        return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
+    }
+    @Bean(name="refreshJwtEncoder")
+        //Create Token
+    JwtEncoder refreshJwtEncoder(@Qualifier("refreshJwkSource") JWKSource<SecurityContext> jwkSource){
+        return new NimbusJwtEncoder(jwkSource);
+    }
+
+    @Bean(name = "refreshJwtDecoder")
+    JwtDecoder refreshJwtDecoder(@Qualifier("refreshRsaKey") RSAKey rsaKey) throws JOSEException {
+        return NimbusJwtDecoder.withPublicKey(rsaKey.toRSAPublicKey()).build();
+    }
+
+
 
 }
 
