@@ -46,32 +46,65 @@ public class TokenServiceImpl implements TokenService{
 
     @Override
     public String accessToken(Authentication auth) {
-        String scope = auth.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                //.filter(authority -> !authority.startsWith("ROLE_"))
-                .collect(Collectors.joining(" "));
+
+        String scope = "";
+
+        if (auth.getPrincipal() instanceof Jwt jwt) {
+            scope = jwt.getClaimAsString("scope");
+        } else {
+            scope = auth.getAuthorities()
+                    .stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .filter(authority -> !authority.startsWith("ROLE_"))
+                    .collect(Collectors.joining(" "));
+        }
+
+        log.info("Scope: {}", scope);
+
+        Instant now = Instant.now();
+
         JwtClaimsSet jwtClaimsSet = JwtClaimsSet.builder()
                 .id(auth.getName())
                 .subject("Access Resource")
-                .audience(List.of("WEB","MOBILE"))
-                .issuedAt(Instant.now())
-                .expiresAt(Instant.now().plus(1, ChronoUnit.MINUTES))
+                .audience(List.of("WEB", "MOBILE"))
+                .issuedAt(now)
+                .expiresAt(now.plus(5, ChronoUnit.MINUTES))
                 .issuer(auth.getName())
-                .claim("scope",scope)
+                .claim("scope", scope)
                 .build();
+
         return jwtEncoder.encode(JwtEncoderParameters.from(jwtClaimsSet)).getTokenValue();
     }
 
+
     @Override
     public String refreshToken(Authentication auth) {
-        JwtClaimsSet refreshClaimSet = JwtClaimsSet.builder()
+
+        String scope = "";
+
+        if (auth.getPrincipal() instanceof Jwt jwt) {
+            scope = jwt.getClaimAsString("scope");
+        } else {
+            scope = auth.getAuthorities()
+                    .stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .filter(authority -> !authority.startsWith("ROLE_"))
+                    .collect(Collectors.joining(" "));
+        }
+
+        Instant now = Instant.now();
+
+        JwtClaimsSet refreshJwtClaimsSet = JwtClaimsSet.builder()
                 .id(auth.getName())
-                .subject("Access Resource")
-                .audience(List.of("WEB","MOBILE"))
-                .issuedAt(Instant.now())
-                .expiresAt(Instant.now().plus(1, ChronoUnit.DAYS))
+                .subject("Refresh Resource")
+                .audience(List.of("WEB", "MOBILE"))
+                .issuedAt(now)
+                .expiresAt(now.plus(1, ChronoUnit.DAYS))
                 .issuer(auth.getName())
+                .claim("scope", scope)
                 .build();
-        return refreshJwtEncoder.encode(JwtEncoderParameters.from(refreshClaimSet)).getTokenValue();
+
+        return refreshJwtEncoder.encode(JwtEncoderParameters.from(refreshJwtClaimsSet)).getTokenValue();
     }
+
 }
